@@ -26,7 +26,7 @@ if (global.__exponent) {
 // vanilla React Native
 const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : (global.__exponent ? 24 : 0);
 
-const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 55;
+const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 48;
 const BACKGROUND_COLOR = Platform.OS === 'ios' ? '#EFEFF2' : '#FFF';
 const BORDER_BOTTOM_COLOR = 'rgba(0, 0, 0, .15)';
 const BORDER_BOTTOM_WIDTH = Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0;
