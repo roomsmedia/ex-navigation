@@ -264,6 +264,11 @@ on `StackNavigation` navigators.
 +
 ```
 
+### Make navigation bar buttons update based on route or app state
+
+See the following example for details on how to connect your buttons to
+the navigator or Redux to perform actions: https://github.com/brentvatne/ex-navigation-conditional-buttons-example
+
 ## StackNavigation actions
 
 As you saw above, you can `push` and `pop` routes. The following is a
@@ -389,14 +394,15 @@ class TabScreen extends React.Component {
       <TabNavigation
         id="main"
         navigatorUID="main"
-        initialTab="more">
+        initialTab="home">
         <TabItem
           id="home"
           title="Home"
           selectedStyle={styles.selectedTab}
-          renderIcon={(isSelected) => <Image source={require('./assets/images/home.png'} /> }>
+          renderIcon={(isSelected) => <Image source={require('./assets/images/home.png')} /> }>
           <StackNavigation
-            id={id}
+            id="home"
+            navigatorUID="home"
             initialRoute={Router.getRoute('home')}
           />
         </TabItem>
@@ -407,7 +413,7 @@ class TabScreen extends React.Component {
           selectedStyle={styles.selectedTab}
           renderIcon={(isSelected) => <Image source={require('./assets/images/posts.png')} /> }>
           <StackNavigation
-            id={id}
+            id="posts"
             initialRoute={Router.getRoute('posts')}
           />
         </TabItem>
@@ -418,7 +424,7 @@ class TabScreen extends React.Component {
           selectedStyle={styles.selectedTab}
           renderIcon={(isSelected) => <Image source={require('./assets/images/profile.png')} /> }>
           <StackNavigation
-            id={id}
+            id="profile"
             initialRoute={Router.getRoute('profile')}
           />
         </TabItem>
@@ -447,6 +453,97 @@ to be set on TabNavigator, as with the example above.
   }}
 />
 ```
+
+## DrawerNavigation
+
+A minimal example using the DrawerNavigation:
+
+```javascript
+import {
+  StackNavigation,
+  DrawerNavigation,
+  DrawerNavigationItem,
+} from '@exponent/ex-navigation';
+
+// Treat the DrawerNavigationLayout route like any other route -- you may want to set
+// it as the intiial route for a top-level StackNavigation
+
+class DrawerNavigationLayout extends React.Component {
+  static route = {
+    navigationBar: {
+      visible: false,
+    }
+  };
+  
+  render() {
+    return (
+      <DrawerNavigation
+        id='main'
+        initialItem='home'
+        drawerWidth={300}
+        renderHeader={this._renderHeader}
+      >
+        <DrawerNavigationItem
+          id='home'
+          selectedStyle={styles.selectedItemStyle}
+          renderTitle={isSelected => this._renderTitle('Home', isSelected)}
+        >
+          <StackNavigation
+            id='home'
+            initialRoute={Router.getRoute('home')}
+          />
+        </DrawerNavigationItem>
+        
+        <DrawerNavigationItem
+          id='about'
+          selectedStyle={styles.selectedItemStyle}
+          renderTitle={isSelected => this._renderTitle('About', isSelected)}
+        >
+          <StackNavigation
+            id='about'
+            initialRoute={Router.getRoute('about')}
+          />
+        </DrawerNavigationItem>
+        
+      </DrawerNavigation>
+    );
+  }
+  
+  _renderHeader = () => {
+    return (
+      <View style={styles.header}>
+      </View>
+    );
+  };
+
+  _renderTitle(text: string, isSelected: boolean) {
+    return (
+      <Text style={[styles.titleText, isSelected ? styles.selectedTitleText : {}]}>
+        {text}
+      </Text>
+    );
+  };
+}
+
+const styles = StyleSheet.create({
+  header: {
+    height: 20
+  },
+
+  selectedItemStyle: {
+    backgroundColor: 'blue'
+  },
+  
+  titleText: {
+    fontWeight: 'bold'
+  },
+  
+  selectedTitleText: {
+    color: 'white'
+  }
+});
+```
+
 
 ### Integrate with your existing Redux store
 

@@ -33,19 +33,25 @@ type SlidingTabItem = {
 };
 
 type Props = {
-  barBackgroundColor: ?string,
-  indicatorStyle: any,
-  initialTab: string,
+  barBackgroundColor?: string,
   children: Array<React.Element<any>>,
+  indicatorStyle?: any,
+  initialTab: string,
+  lazy?: bool,
   navigation: any,
   navigationState: any,
-  position: "top" | "bottom",
-  pressColor: ?string,
-  renderBefore: () => ?ReactElement<any>,
-  style: any,
   onRegisterNavigatorContext: () => any,
-  tabBarStyle: any,
-  tabStyle: any,
+  onChangeTab: (key: string) => any,
+  onUnregisterNavigatorContext: (navigatorUID: string) => void,
+  position: "top" | "bottom",
+  pressColor?: string,
+  renderBefore: () => ?React.Element<any>,
+  renderHeader?: (props: any) => ?React.Element<any>,
+  renderLabel?: (routeParams: any) => ?React.Element<any>,
+  style?: any,
+  swipeEnabled?: boolean,
+  tabBarStyle?: any,
+  tabStyle?: any,
 };
 
 type State = {
@@ -109,7 +115,7 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
 
     this._registerNavigatorContext();
 
-    let routes = tabItems.map(i => ({key: i.id}));
+    let routes = tabItems.map(({ id, title }) => ({ title, key: id }));
     let routeKeys = routes.map(r => r.key);
 
     this.props.navigation.dispatch(Actions.setCurrentNavigator(
@@ -124,6 +130,7 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
 
   componentWillUnmount() {
     this.props.navigation.dispatch(Actions.removeNavigator(this.state.navigatorUID));
+    this.props.onUnregisterNavigatorContext(this.state.navigatorUID);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -169,17 +176,24 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
 
     return (
       <TabViewAnimated
+        lazy={this.props.lazy}
         style={[styles.container, this.props.style]}
         navigationState={navigationState}
         renderScene={this._renderPage}
-        renderHeader={this._renderHeader}
+        renderHeader={this.props.renderHeader || this._renderHeader}
         onRequestChangeTab={this._setActiveTab}
       />
     );
   }
 
   _renderPage = (props) => {
-    return <TabViewPage {...props} renderScene={this._renderScene} />;
+    return (
+      <TabViewPage
+        {...props}
+        swipeEnabled={this.props.swipeEnabled}
+        renderScene={this._renderScene}
+      />
+    );
   }
 
   _renderScene = ({ route }) => {
@@ -191,19 +205,13 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
     }
   };
 
-  _renderLabel = (options) => {
-    let { route, focused, index } = options;
-    let tabItem = this.state.tabItems.find(i => i.id === route.key);
-
-    return tabItem && tabItem.renderLabel ? tabItem.renderLabel(options) : null;
-  }
-
   _renderHeader = (props) => {
     const TabBarComponent = this.props.position === 'top' ? TabBarTop : TabBar;
     const tabBarProps = {
       pressColor: this.props.pressColor,
       indicatorStyle: this.props.indicatorStyle,
       tabStyle: this.props.tabStyle,
+      renderLabel: this.props.renderLabel,
       style: [{backgroundColor: this.props.barBackgroundColor}, this.props.tabBarStyle],
     };
 
@@ -213,7 +221,6 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
         <TabBarComponent
           {...props}
           {...tabBarProps}
-          renderLabel={this._renderLabel}
         />
       </View>
     );
@@ -243,19 +250,14 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
         ..._.omit(tabItemProps, ['children']),
       };
 
+      invariant(
+        !tabItem.renderLabel,
+        'renderLabel should be passed to SlidingTabNavigation instead of SlidingTabNavigationItem.',
+      );
+
       if (Children.count(tabItemProps.children) > 0) {
         tabItem.element = Children.only(tabItemProps.children);
       }
-
-      // const tabItemOnPress = () => {
-      //   this._setActiveTab(tabItemProps.id, index);
-      // };
-
-      // if (typeof tabItemProps.onPress === 'function') {
-      //   tabItem.onPress = tabItem.onPress.bind(this, tabItemOnPress);
-      // } else {
-      //   tabItem.onPress = tabItemOnPress;
-      // }
 
       return tabItem;
     });
@@ -272,9 +274,9 @@ class ExNavigationSlidingTab extends PureComponent<any, Props, State> {
     let key = tabItem.id;
     this._getNavigatorContext().jumpToTab(key);
 
-    // if (typeof this.props.onTabPress === 'function') {
-    //   this.props.onTabPress(key);
-    // }
+    if (typeof this.props.onChangeTab === 'function') {
+      this.props.onChangeTab(key);
+    }
   }
 
   _getNavigationState(props: ?Props): Object {

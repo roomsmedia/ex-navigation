@@ -36,13 +36,13 @@ import NavigationTypeDefinition from 'react-native/Libraries/NavigationExperimen
 import type {
   NavigationSceneRendererProps, NavigationScene,
 } from 'NavigationTypeDefinition';
-import type { ExNavigationRoute } from './ExNavigationRouter';
+import type { ExNavigationRoute, ExNavigationRouter } from './ExNavigationRouter';
 import type ExNavigationContext from './ExNavigationContext';
 import type { ExNavigationConfig, ExNavigationState } from './ExNavigationTypeDefinition';
 import type { ExNavigationTabContext } from './tab/ExNavigationTab';
 
 const DEFAULT_ROUTE_CONFIG: ExNavigationConfig = {
-  styles: Platform.OS !== 'android' ? NavigationStyles.FloatHorizontal : NavigationStyles.Fade,
+  styles: Platform.OS === 'ios' ? NavigationStyles.SlideHorizontal : NavigationStyles.Fade,
 };
 
 const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : (global.__exponent ? 24 : 0);
@@ -56,6 +56,7 @@ type Props = {
   navigationState?: Object,
   navigatorUID: string,
   onRegisterNavigatorContext: (navigatorUID: string, navigatorContext: ExNavigationStackContext) => void,
+  onUnregisterNavigatorContext: (navigatorUID: string) => void,
   onTransitionEnd: () => void,
   onTransitionStart: () => void,
 };
@@ -107,8 +108,16 @@ export class ExNavigationStackContext extends ExNavigatorContext {
     this.componentInstance = componentInstance;
   }
 
+  get router():ExNavigationRouter<*> {
+    return this.navigationContext.router;
+  }
+
   @debounce(500, true)
-  push(route: ExNavigationRoute) {
+  push(route: (ExNavigationRoute | string), params?: Object) {
+    if (typeof route == 'string') {
+      route = this.router.getRoute(route, params);
+    }
+
     invariant(route !== null && route.key, 'Route is null or malformed.');
     this.navigationContext.performAction(({ stacks }) => {
       stacks(this.navigatorUID).push(route);
@@ -130,7 +139,11 @@ export class ExNavigationStackContext extends ExNavigatorContext {
   }
 
   @debounce(500, true)
-  replace(route: ExNavigationRoute) {
+  replace(route: (ExNavigationRoute | string), params?: Object) {
+    if (typeof route == 'string') {
+      route = this.router.getRoute(route, params);
+    }
+
     invariant(route !== null && route.key, 'Route is null or malformed.');
 
     this.componentInstance._useAnimation = false;
@@ -334,6 +347,7 @@ class ExNavigationStack extends PureComponent<any, Props, State> {
 
   componentWillUnmount() {
     this.props.navigation.dispatch(Actions.removeNavigator(this.state.navigatorUID));
+    this.props.onUnregisterNavigatorContext(this.state.navigatorUID);
   }
 
   componentWillReceiveProps(nextProps: Props) {

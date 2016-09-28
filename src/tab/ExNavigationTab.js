@@ -56,6 +56,7 @@ export class ExNavigationTabContext extends ExNavigatorContext {
 type TabItem = {
   id: string,
   renderIcon?: Function,
+  renderBadge?: Function,  
   tabContent?: React.Element<{}>,
 };
 
@@ -70,6 +71,7 @@ type Props = {
   children: Array<React.Element<{}>>,
   navigation: ExNavigationContext,
   onRegisterNavigatorContext: (navigatorUID: string, navigatorContext: ExNavigationTabContext) => void,
+  onUnregisterNavigatorContext: (navigatorUID: string) => void,
   navigationState: Object,
   translucent?: bool,
 };
@@ -213,6 +215,7 @@ class ExNavigationTab extends PureComponent<any, Props, State> {
 
   componentWillUnmount() {
     this.props.navigation.dispatch(Actions.removeNavigator(this.state.navigatorUID));
+    this.props.onUnregisterNavigatorContext(this.state.navigatorUID);
   }
 
   componentWillReceiveProps(nextProps) {

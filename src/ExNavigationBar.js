@@ -30,6 +30,7 @@ const APPBAR_HEIGHT = Platform.OS === 'ios' ? 44 : 48;
 const BACKGROUND_COLOR = Platform.OS === 'ios' ? '#EFEFF2' : '#FFF';
 const BORDER_BOTTOM_COLOR = 'rgba(0, 0, 0, .15)';
 const BORDER_BOTTOM_WIDTH = Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 0;
+const BACK_BUTTON_HIT_SLOP = { top: 0, bottom: 0, left: 0, right: 30 };
 
 class ExNavigationBarTitle extends PureComponent {
   render() {
@@ -59,10 +60,19 @@ const titleStyles = StyleSheet.create({
 
   titleText: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '500',
     color: 'rgba(0, 0, 0, .9)',
-    textAlign: Platform.OS === 'ios' ? 'center' : 'left',
+    ...Platform.select({
+      ios: {
+        fontSize: 17,
+        fontWeight: '500',
+        textAlign: 'center',
+      },
+      android: {
+        fontSize: 20,
+        // fontFamily: 'sans-serif-medium',
+        textAlign: 'left',
+      },
+    }),
   },
 });
 
@@ -72,7 +82,11 @@ class ExNavigationBarBackButton extends PureComponent {
     const { tintColor } = this.props;
 
     return (
-      <TouchableOpacity style={buttonStyles.buttonContainer} onPress={this._onPress}>
+      <TouchableOpacity
+        onPress={this._onPress}
+        hitSlop={BACK_BUTTON_HIT_SLOP}
+        style={buttonStyles.buttonContainer}
+      >
         <Image
           style={[buttonStyles.button, tintColor ? {tintColor} : null]}
           source={require('./ExNavigationAssets').backIcon}
@@ -107,24 +121,36 @@ const buttonStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   button: {
-    height: 24,
-    width: 24,
-    margin: Platform.OS === 'ios' ? 10 : 16,
     resizeMode: 'contain',
-  },
-  menuButton: {
-    height: 26,
-    width: 26,
     ...Platform.select({
       ios: {
-        margin: 10,
+        height: 21,
+        width: 13,
+        marginLeft: 8,
+        marginRight: 6,
       },
       android: {
-        marginLeft: 23,
-        marginTop: -1,
+        height: 24,
+        width: 24,
+        margin: 16,
       },
     }),
+  },
+  menuButton: {
     resizeMode: 'contain',
+    ...Platform.select({
+      ios: {
+        height: 26,
+        width: 26,
+        marginLeft: 8,
+        marginRight: 6,
+      },
+      android: {
+        height: 24,
+        width: 24,
+        margin: 16,
+      },
+    }),
   },
 });
 
@@ -354,7 +380,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomColor: ExNavigationBar.DEFAULT_BORDER_BOTTOM_COLOR,
     borderBottomWidth: ExNavigationBar.DEFAULT_BORDER_BOTTOM_WIDTH,
-    elevation: 2,
+    elevation: 4,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     left: 0,
